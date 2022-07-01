@@ -4,6 +4,7 @@ const cors = require("cors");
 const { response } = require("express");
 
 const app = express();
+
 app.use(express.json());
 app.use(express.static("build"));
 app.use(
@@ -17,46 +18,45 @@ morgan.token("body", (request, response) => {
     return JSON.stringify(request.body);
 });
 
-let todos = [
-    {
-        title: "test note",
-        content: "test note content",
-        id: 1,
-        status: 0,
-    },
-    {
-        title: "doing test",
-        content: "test note content",
-        id: 2,
-        status: 1,
-    },
-    {
-        title: "done test",
-        content: "test note content",
-        id: 3,
-        status: 2,
-    },
-];
+const Todo = require("./models/todo");
 
 app.get("/api/todos", (request, response) => {
-    response.json(todos);
+    Todo.find({})
+        .then((result) => {
+            response.json(result);
+        })
+        .catch((error) => console.log(error));
 });
 
 app.get("/api/todos/:id", (request, response) => {
-    const id = Number(request.params.id);
-    const todo = todos.find((person) => todo.id === id);
-    if (person) {
-        response.json(person);
-    } else {
-        response.status(404).end();
-    }
+    const targetId = Number(request.params.id);
+    Todo.findOne({ id: targetId })
+        .then((result) => {
+            response.json(result);
+        })
+        .catch((error) => {
+            console.log(error);
+            response.status(404).end();
+        });
+
+    // if (person) {
+    //     response.json(person);
+    // } else {
+    //     response.status(404).end();
+    // }
 });
 
 app.delete("/api/todos/:id", (request, response) => {
-    const id = Number(request.params.id);
-    todos = todos.filter((todo) => todo.id !== id);
-
-    response.status(204).end();
+    const targetId = request.params.id;
+    Todo.findByIdAndRemove({ _id: targetId })
+        .then((result) => {
+            result === null
+                ? response.status(404).json({ error: "ID not found" })
+                : response.status(200).json(result);
+        })
+        .catch((error) => {
+            console.log(error);
+        });
 });
 
 app.post("/api/todos", (request, response) => {
@@ -66,26 +66,31 @@ app.post("/api/todos", (request, response) => {
         return response.status(400).json({ error: "title missing" });
     }
 
-    const maxId =
-        todos.length > 0 ? Math.max(...todos.map((todo) => todo.id)) : 0;
-
     const todo = {
-        id: maxId + 1,
         title: body.title,
         content: body.content,
         status: body.status,
     };
-
-    todos = todos.concat(todo);
-    console.log(todos);
-    response.json(todo);
+    Todo.create(todo)
+        .then((result) => {
+            response.json(result);
+        })
+        .catch((error) => console.log(error));
 });
 
 app.put("/api/todos/:id", (request, response) => {
     const updatedTodo = request.body;
-    const id = Number(updatedTodo.id);
-    todos = todos.map((todo) => (todo.id !== id ? todo : updatedTodo));
-    response.status(200).end();
+    console.log(updatedTodo);
+    const targetId = updatedTodo.id;
+    targetId;
+    Todo.findByIdAndUpdate({ _id: targetId }, updatedTodo)
+        .then((result) => {
+            console.log(result);
+            result === null
+                ? response.status(404).json({ error: "ID not found" })
+                : response.status(200).json(result);
+        })
+        .catch((error) => console.log(error));
 });
 
 const unknownEndpoint = (request, response) => {
