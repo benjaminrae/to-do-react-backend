@@ -5,8 +5,11 @@ A KanBan-ish to do app.
 [Live Site](https://web-production-48c3.up.railway.app/)
 
 Desktop
+
 ![Do-doing-done desktop](/resources/screenshots/do-doing-done-desktop.png)
+
 Mobile - buttons to navigate the three lists
+
 ![Do-doing-done mobile](/resources/screenshots/do-doing-done-mobile.png)
 
 ## About the project
